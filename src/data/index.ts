@@ -10,6 +10,15 @@ export type WorkerEvent = {
 
 type BusyWorker = Worker & { busy?: boolean };
 
+type SingletonClass<TClass, TClassProps> = {
+    getInstance: (props: TClassProps) => TClass
+} & TClass
+
+type Props = {
+    workerScript: string;
+    workerName: string;
+    maxConcurrency: number;
+}
 class ConcurrentFetcher {
     private static instance: ConcurrentFetcher;
     workers: BusyWorker[];
@@ -18,7 +27,7 @@ class ConcurrentFetcher {
     taskQueue: Task[];
     maxConcurrency: number;
   
-    private constructor(workerScript: string, workerName: string, maxConcurrency: number = 5) {
+    private constructor({workerScript, workerName, maxConcurrency = 5}: Props) {
         this.workerScript = workerScript;
         this.workerName = workerName;
         this.workers = [];
@@ -27,9 +36,9 @@ class ConcurrentFetcher {
         this.createWorkers();
     }
 
-    public static getInstance(workerScript: string,  workerName: string, maxConcurrency: number = 5): ConcurrentFetcher {
+    public static getInstance({workerScript, workerName, maxConcurrency = 5}: Props): ConcurrentFetcher {
         if (!ConcurrentFetcher.instance) {
-          ConcurrentFetcher.instance = new ConcurrentFetcher(workerScript, workerName, maxConcurrency);
+          ConcurrentFetcher.instance = new ConcurrentFetcher({workerScript, workerName, maxConcurrency});
         }
         return ConcurrentFetcher.instance;
       }
@@ -95,7 +104,14 @@ class ConcurrentFetcher {
       // Process next task
       this.processTaskQueue();
     }
-  }
+}
   
-  export default ConcurrentFetcher;
+const createSingleton = <TClassProps, TClass>(props: TClassProps, baseClass: TClass ) => Object.freeze((baseClass as SingletonClass<TClass, TClassProps>).getInstance(props))
   
+
+const ConcurrentFetcherSingleton = (props: Props) => {
+     return createSingleton<Props, ConcurrentFetcher>(props, ConcurrentFetcher as unknown as ConcurrentFetcher)
+}
+
+export default ConcurrentFetcherSingleton;
+   

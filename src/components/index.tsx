@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import ConcurrentFetcher from '../data';
+import ConcurrentFetcherSingleton from '../data';
 
 import workerScript from '../data/fetch-worker?worker&url'
 
-const fetcher = ConcurrentFetcher.getInstance(workerScript, "background-fetch-worker");
+const fetcher = ConcurrentFetcherSingleton({workerScript, workerName: "background-fetch-worker", maxConcurrency: 5});
 
 console.log(workerScript)
 
